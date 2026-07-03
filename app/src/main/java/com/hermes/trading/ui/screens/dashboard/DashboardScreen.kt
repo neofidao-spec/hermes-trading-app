@@ -1,0 +1,173 @@
+package com.hermes.trading.ui.screens.dashboard
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.hermes.trading.ui.components.PnlSummaryCard
+import com.hermes.trading.ui.components.PositionItem
+import com.hermes.trading.ui.theme.BrandGreen
+import com.hermes.trading.ui.theme.BrandRed
+import com.hermes.trading.ui.theme.DarkBackground
+import com.hermes.trading.ui.theme.DarkOnSurfaceVariant
+
+@Composable
+fun DashboardScreen() {
+    var isEngineRunning by remember { mutableStateOf(false) }
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBackground)
+            .padding(horizontal = 20.dp),
+        contentPadding = PaddingValues(top = 24.dp, bottom = 80.dp)
+    ) {
+        // --- Top Bar ---
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Hermes Auto-Trader",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                
+                // Server Status Indicator
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(BrandGreen)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Connected",
+                        color = BrandGreen,
+                        fontSize = 12.sp
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // --- Summary Card ---
+        item {
+            PnlSummaryCard(
+                dailyPnl = 124.50,
+                winrate = 81.8,
+                totalTrades = 12
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // --- Engine Control ---
+        item {
+            EngineControlCard(
+                isRunning = isEngineRunning,
+                onToggle = { isEngineRunning = !isEngineRunning }
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+
+        // --- Active Positions Header ---
+        item {
+            Text(
+                text = "Active Positions",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // --- Mock Positions ---
+        item {
+            PositionItem(
+                symbol = "BTCUSDT",
+                side = "LONG",
+                leverage = 20,
+                entryPrice = 64200.50,
+                markPrice = 64500.00,
+                unrealizedPnl = 45.20,
+                roe = 15.4
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        item {
+            PositionItem(
+                symbol = "ETHUSDT",
+                side = "SHORT",
+                leverage = 10,
+                entryPrice = 3500.00,
+                markPrice = 3510.50,
+                unrealizedPnl = -12.50,
+                roe = -4.2
+            )
+        }
+    }
+}
+
+@Composable
+private fun EngineControlCard(
+    isRunning: Boolean,
+    onToggle: () -> Unit
+) {
+    val containerColor = if (isRunning) BrandRed.copy(alpha = 0.15f) else BrandGreen.copy(alpha = 0.15f)
+    val contentColor = if (isRunning) BrandRed else BrandGreen
+    val icon = if (isRunning) Icons.Default.Stop else Icons.Default.PlayArrow
+    val text = if (isRunning) "STOP TRADING ENGINE" else "START TRADING ENGINE"
+    val statusText = if (isRunning) "Engine v6t is running actively" else "Engine is currently paused"
+
+    Button(
+        onClick = onToggle,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = containerColor,
+            contentColor = contentColor
+        )
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Column(horizontalAlignment = Alignment.Start) {
+                Text(
+                    text = text,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                )
+                Text(
+                    text = statusText,
+                    color = contentColor.copy(alpha = 0.8f),
+                    fontSize = 11.sp
+                )
+            }
+        }
+    }
+}

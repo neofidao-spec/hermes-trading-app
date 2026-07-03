@@ -6,7 +6,9 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import com.hermes.trading.ui.screens.dashboard.DashboardScreen
 import com.hermes.trading.ui.screens.login.LoginScreen
 import com.hermes.trading.ui.theme.HermesTradingTheme
 
@@ -19,7 +21,15 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    LoginScreen()
+                    var isLoggedIn by remember { mutableStateOf(false) }
+
+                    if (isLoggedIn) {
+                        DashboardScreen()
+                    } else {
+                        LoginScreen(
+                            onLoginSuccess = { isLoggedIn = true }
+                        )
+                    }
                 }
             }
         }
