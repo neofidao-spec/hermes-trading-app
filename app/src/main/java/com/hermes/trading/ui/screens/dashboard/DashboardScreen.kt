@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.hermes.trading.api.PositionData
 import com.hermes.trading.ui.components.PnlSummaryCard
 import com.hermes.trading.ui.components.PositionItem
 import com.hermes.trading.ui.theme.BrandGreen
@@ -31,6 +32,7 @@ fun DashboardScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val balance by viewModel.balance.collectAsStateWithLifecycle()
+    val positions by viewModel.positions.collectAsStateWithLifecycle()
     val isEngineRunning by viewModel.isEngineRunning.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
@@ -62,12 +64,12 @@ fun DashboardScreen(
                         modifier = Modifier
                             .size(8.dp)
                             .clip(CircleShape)
-                            .background(BrandGreen)
+                            .background(if (uiState is DashboardUiState.Success) BrandGreen else BrandRed)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "Connected",
-                        color = BrandGreen,
+                        text = if (uiState is DashboardUiState.Success) "Connected" else "Disconnected",
+                        color = if (uiState is DashboardUiState.Success) BrandGreen else BrandRed,
                         fontSize = 12.sp
                     )
                 }
@@ -80,7 +82,7 @@ fun DashboardScreen(
             PnlSummaryCard(
                 dailyPnl = balance,
                 winrate = 81.8,
-                totalTrades = 12
+                totalTrades = positions.size
             )
             Spacer(modifier = Modifier.height(24.dp))
         }
@@ -120,86 +122,70 @@ fun DashboardScreen(
 
         // --- Active Positions Header ---
         item {
-            Text(
-                text = "Active Positions",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Active Positions",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                if (positions.isNotEmpty()) {
+                    TextButton(onClick = { viewModel.refresh() }) {
+                        Text("Refresh", color = BrandGreen, fontSize = 12.sp)
+                    }
+                }
+            }
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // --- Mock Positions (placeholder until API endpoint ready) ---
-        item {
-            PositionItem(
-                symbol = "BTCUSDT",
-                side = "LONG",
-                leverage = 20,
-                entryPrice = 64200.50,
-                markPrice = 64500.00,
-                unrealizedPnl = 45.20,
-                roe = 15.4
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-
-        item {
-            PositionItem(
-                symbol = "ETHUSDT",
-                side = "SHORT",
-                leverage = 10,
-                entryPrice = 3500.00,
-                markPrice = 3510.50,
-                unrealizedPnl = -12.50,
-                roe = -4.2
-            )
+        // --- Real Positions from Bitget API ---
+        if (positions.isEmpty() && uiState is DashboardUiState.Success) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No active positions — engine idle",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 14.sp
+                    )
+                }
+            }
+        } else {
+            items(items = positions, key = { it.symbol + it.holdSide }) { pos ->
+                PositionRow(pos = pos)
+                Spacer(modifier = Modifier.height(12.dp))
+            }
         }
     }
 }
 
 @Composable
-private fun EngineControlCard(
-    isRunning: Boolean,
-    onToggle: () -> Unit
-) {
-    val containerColor = if (isRunning) BrandRed.copy(alpha = 0.15f) else BrandGreen.copy(alpha = 0.15f)
-    val contentColor = if (isRunning) BrandRed else BrandGreen
-    val icon = if (isRunning) Icons.Default.Stop else Icons.Default.PlayArrow
-    val text = if (isRunning) "STOP TRADING ENGINE" else "START TRADING ENGINE"
-    val statusText = if (isRunning) "Engine v6t is running actively" else "Engine is currently paused"
+private fun PositionRow(pos: PositionData) {
+    val side = pos.holdSide.uppercase() // "LONG" or "SHORT"
+    val leverage = pos.leverage.toIntOrNull() ?: 1
+    val entry = pos.averageOpenPrice.toDoubleOrNull() ?: 0.0
+    val mark = pos.marketPrice.toDoubleOrNull() ?: 0.0
+    val pnl = pos.unrealizedPL.toDoubleOrNull() ?: 0.0
+    val size = pos.total.toDoubleOrNull() ?: 0.0
+    val margin = pos.marginSize.toDoubleOrNull() ?: 0.0
+    val roe = if (margin > 0) (pnl / margin) * 100.0 else 0.0
 
-    Button(
-        onClick = onToggle,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(64.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = containerColor,
-            contentColor = contentColor
-        )
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Column(horizontalAlignment = Alignment.Start) {
-                Text(
-                    text = text,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
-                Text(
-                    text = statusText,
-                    color = contentColor.copy(alpha = 0.8f),
-                    fontSize = 11.sp
-                )
-            }
-        }
-    }
+    PositionItem(
+        symbol = pos.symbol,
+        side = side,
+        leverage = leverage,
+        entryPrice = entry,
+        markPrice = mark,
+        unrealizedPnl = pnl,
+        roe = roe
+    )
 }

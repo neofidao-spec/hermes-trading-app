@@ -26,25 +26,39 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hermes.trading.ui.theme.BrandGreen
 import com.hermes.trading.ui.theme.DarkBackground
 import com.hermes.trading.ui.theme.DarkSurface
 import com.hermes.trading.ui.theme.DarkSurfaceVariant
 import com.hermes.trading.ui.theme.DarkOnSurfaceVariant
+import com.hermes.trading.viewmodel.LoginUiState
+import com.hermes.trading.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: () -> Unit = {}
+    onLoginSuccess: () -> Unit = {},
+    viewModel: LoginViewModel = hiltViewModel()
 ) {
+    val loginState by viewModel.uiState.collectAsStateWithLifecycle()
+    val isLoading = loginState is LoginUiState.Loading
+    val errorMessage = (loginState as? LoginUiState.Error)?.message
+
+    // Navigate to dashboard on success
+    LaunchedEffect(loginState) {
+        if (loginState is LoginUiState.Success) {
+            onLoginSuccess()
+            viewModel.resetState()
+        }
+    }
+
     var apiKey by rememberSaveable { mutableStateOf("") }
     var apiSecret by rememberSaveable { mutableStateOf("") }
     var passphrase by rememberSaveable { mutableStateOf("") }
 
     var isSecretVisible by rememberSaveable { mutableStateOf(false) }
     var isPassphraseVisible by rememberSaveable { mutableStateOf(false) }
-
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     val scrollState = rememberScrollState()
 
@@ -158,15 +172,11 @@ fun LoginScreen(
             // Connect API Button
             Button(
                 onClick = {
-                    // TODO: Hook up to backend API login
-                    // For now, simulate navigation
-                    errorMessage = null
-                    when {
-                        apiKey.isBlank() -> errorMessage = "API Key is required"
-                        apiSecret.length < 8 -> errorMessage = "API Secret seems too short"
-                        passphrase.length < 4 -> errorMessage = "Passphrase is required"
-                        else -> onLoginSuccess()
-                    }
+                    viewModel.login(
+                        apiKey = apiKey,
+                        secret = apiSecret,
+                        passphrase = passphrase
+                    )
                 },
                 modifier = Modifier
                     .fillMaxWidth()
