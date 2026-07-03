@@ -94,11 +94,6 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
     
-    #if false
-    // DataStore (for encrypted prefs)
-    implementation("androidx.datastore:datastore-preferences:1.0.0")
-    #endif
-    
     // Charts
     implementation("com.patrykandpatrick.vico:compose-m3:1.13.1")
     
