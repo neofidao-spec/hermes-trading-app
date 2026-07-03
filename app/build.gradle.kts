@@ -2,6 +2,8 @@ plugins {
     id("com.android.application")
     kotlin("android")
     kotlin("plugin.serialization") version "1.9.22"
+    kotlin("kapt")
+    id("dagger.hilt.android.plugin") version "2.51"
 }
 
 android {
@@ -29,34 +31,18 @@ android {
                 "proguard-rules.pro"
             )
         }
-        debug {
-            isMinifyEnabled = false
-        }
+        debug { isMinifyEnabled = false }
     }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+    kotlinOptions { jvmTarget = "17" }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
-    buildFeatures {
-        compose = true
-        buildConfig = true
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.8"
-    }
-
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
-    }
+    buildFeatures { compose = true; buildConfig = true }
+    composeOptions { kotlinCompilerExtensionVersion = "1.5.8" }
+    packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
 }
 
 dependencies {
@@ -64,7 +50,7 @@ dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.activity:activity-compose:1.8.2")
-    
+
     // Compose BOM
     implementation(platform("androidx.compose:compose-bom:2024.01.00"))
     implementation("androidx.compose.ui:ui")
@@ -72,31 +58,39 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
-    
-    // Navigation
+
+    // Navigation & Hilt navigation
     implementation("androidx.navigation:navigation-compose:2.7.6")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
-    
+
     // Networking
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-    
+
     // Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
-    
+
     // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
-    
+
     // Charts
     implementation("com.patrykandpatrick.vico:compose-m3:1.13.1")
-    
+
     // Debug
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    // Hilt DI
+    implementation("com.google.dagger:hilt-android:2.51")
+    kapt("com.google.dagger:hilt-android-compiler:2.51")
+
+    // Encrypted DataStore & Security Crypto
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 }

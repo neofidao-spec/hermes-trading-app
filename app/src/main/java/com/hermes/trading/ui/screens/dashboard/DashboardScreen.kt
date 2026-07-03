@@ -13,20 +13,29 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hermes.trading.ui.components.PnlSummaryCard
 import com.hermes.trading.ui.components.PositionItem
 import com.hermes.trading.ui.theme.BrandGreen
 import com.hermes.trading.ui.theme.BrandRed
 import com.hermes.trading.ui.theme.DarkBackground
-import com.hermes.trading.ui.theme.DarkOnSurfaceVariant
+import com.hermes.trading.viewmodel.DashboardViewModel
 
 @Composable
-fun DashboardScreen() {
-    var isEngineRunning by remember { mutableStateOf(false) }
+fun DashboardScreen(
+    viewModel: DashboardViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val balance by viewModel.balance.collectAsStateWithLifecycle()
+    val isEngineRunning by viewModel.isEngineRunning.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.refresh()
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -47,8 +56,7 @@ fun DashboardScreen() {
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onBackground
                 )
-                
-                // Server Status Indicator
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
@@ -70,18 +78,42 @@ fun DashboardScreen() {
         // --- Summary Card ---
         item {
             PnlSummaryCard(
-                dailyPnl = 124.50,
+                dailyPnl = balance,
                 winrate = 81.8,
                 totalTrades = 12
             )
             Spacer(modifier = Modifier.height(24.dp))
         }
 
+        // --- Loading / Error feedback ---
+        when (val state = uiState) {
+            is DashboardUiState.Loading -> {
+                item {
+                    LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = BrandGreen
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
+            is DashboardUiState.Error -> {
+                item {
+                    Text(
+                        text = "⚠️ ${state.message}",
+                        color = BrandRed,
+                        fontSize = 12.sp
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
+            else -> Unit
+        }
+
         // --- Engine Control ---
         item {
             EngineControlCard(
                 isRunning = isEngineRunning,
-                onToggle = { isEngineRunning = !isEngineRunning }
+                onToggle = { viewModel.toggleEngine() }
             )
             Spacer(modifier = Modifier.height(32.dp))
         }
@@ -96,7 +128,7 @@ fun DashboardScreen() {
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // --- Mock Positions ---
+        // --- Mock Positions (placeholder until API endpoint ready) ---
         item {
             PositionItem(
                 symbol = "BTCUSDT",
