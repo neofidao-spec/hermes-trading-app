@@ -3,6 +3,7 @@ package com.hermes.trading.ui.screens.dashboard
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -24,6 +25,7 @@ import com.hermes.trading.ui.components.PositionItem
 import com.hermes.trading.ui.theme.BrandGreen
 import com.hermes.trading.ui.theme.BrandRed
 import com.hermes.trading.ui.theme.DarkBackground
+import com.hermes.trading.viewmodel.DashboardUiState
 import com.hermes.trading.viewmodel.DashboardViewModel
 
 @Composable
@@ -188,4 +190,52 @@ private fun PositionRow(pos: PositionData) {
         unrealizedPnl = pnl,
         roe = roe
     )
+}
+
+@Composable
+private fun EngineControlCard(
+    isRunning: Boolean,
+    onToggle: () -> Unit
+) {
+    val containerColor = if (isRunning) BrandRed.copy(alpha = 0.15f) else BrandGreen.copy(alpha = 0.15f)
+    val contentColor = if (isRunning) BrandRed else BrandGreen
+    val icon = if (isRunning) Icons.Default.Stop else Icons.Default.PlayArrow
+    val text = if (isRunning) "STOP TRADING ENGINE" else "START TRADING ENGINE"
+    val statusText = if (isRunning) "Engine v6t is running actively" else "Engine is currently paused"
+
+    Button(
+        onClick = onToggle,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = containerColor,
+            contentColor = contentColor
+        )
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Column(horizontalAlignment = Alignment.Start) {
+                Text(
+                    text = text,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                )
+                Text(
+                    text = statusText,
+                    color = contentColor.copy(alpha = 0.8f),
+                    fontSize = 11.sp
+                )
+            }
+        }
+    }
 }
