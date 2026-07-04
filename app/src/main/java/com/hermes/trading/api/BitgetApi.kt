@@ -6,12 +6,12 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Query
 
-// Minimal Bitget private endpoint for demo – account balance
+// Bitget private endpoints – account balance + open futures positions
 interface BitgetApi {
 
     @GET("api/v5/account/balance")
     suspend fun getBalance(
-        @Header("ACCESS-KEY") apiKey: String,
+        @Header("ACCESS-KEY") ak: String,
         @Header("ACCESS-SIGN") sign: String,
         @Header("ACCESS-TIMESTAMP") timestamp: String,
         @Header("ACCESS-PASSPHRASE") passphrase: String,
@@ -20,7 +20,7 @@ interface BitgetApi {
 
     @GET("api/v2/mix/position/all-position")
     suspend fun getAllPositions(
-        @Header("ACCESS-KEY") apiKey: String,
+        @Header("ACCESS-KEY") ak: String,
         @Header("ACCESS-SIGN") sign: String,
         @Header("ACCESS-TIMESTAMP") timestamp: String,
         @Header("ACCESS-PASSPHRASE") passphrase: String,

@@ -23,11 +23,11 @@ class SecurePreferences @Inject constructor(@ApplicationContext private val cont
     private val KEY_SECRET = stringPreferencesKey("api_secret")
     private val KEY_PASSPHRASE = stringPreferencesKey("api_passphrase")
 
-    suspend fun saveCredentials(apiKey: String, apiSecret: String, passphrase: String) {
+    suspend fun saveCredentials(apiKeyValue: String, secretValue: String, passphraseValue: String) {
         dataStore.edit { prefs ->
-            prefs[KEY_API] = apiKey
-            prefs[KEY_SECRET] = apiSecret
-            prefs[KEY_PASSPHRASE] = passphrase
+            prefs[KEY_API] = apiKeyValue
+            prefs[KEY_SECRET] = secretValue
+            prefs[KEY_PASSPHRASE] = passphraseValue
         }
     }
 
@@ -39,7 +39,7 @@ class SecurePreferences @Inject constructor(@ApplicationContext private val cont
         }
     }
 
-    data class AuthCreds(val apiKey: String, val apiSecret: String, val passphrase: String)
+    data class AuthCreds(val ak: String, val apiSecret: String, val passphrase: String)
 
     val credentials: Flow<AuthCreds?> = dataStore.data.map { prefs ->
         val key = prefs[KEY_API]

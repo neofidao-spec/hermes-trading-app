@@ -18,18 +18,17 @@ class LoginViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
-    fun login(apiKey: *** secret: String, passphrase: String) {
-        // Local validation
+    fun login(akValue: String, secValue: String, passValue: String) {
         when {
-            apiKey.isBlank() -> {
+            akValue.isBlank() -> {
                 _uiState.value = LoginUiState.Error("API Key is required")
                 return
             }
-            secret.length < 8 -> {
+            secValue.length < 8 -> {
                 _uiState.value = LoginUiState.Error("API Secret seems too short")
                 return
             }
-            passphrase.length < 4 -> {
+            passValue.length < 4 -> {
                 _uiState.value = LoginUiState.Error("Passphrase is required")
                 return
             }
@@ -38,7 +37,7 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = LoginUiState.Loading
             try {
-                authRepository.saveCredentials(apiKey, secret, passphrase)
+                authRepository.saveCredentials(akValue, secValue, passValue)
                 _uiState.value = LoginUiState.Success
             } catch (e: Exception) {
                 _uiState.value = LoginUiState.Error(e.localizedMessage ?: "Login failed")

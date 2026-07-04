@@ -14,8 +14,8 @@ class AuthRepository @Inject constructor(
     private val securePreferences: SecurePreferences,
     private val api: BitgetApi
 ) {
-    suspend fun saveCredentials(apiKey: *** secret: String, passphrase: String) {
-        securePreferences.saveCredentials(apiKey, secret, passphrase)
+    suspend fun saveCredentials(akValue: String, secValue: String, passValue: String) {
+        securePreferences.saveCredentials(akValue, secValue, passValue)
     }
 
     suspend fun clearCredentials() {
@@ -30,7 +30,7 @@ class AuthRepository @Inject constructor(
         val sign = signRequest(creds.apiSecret, timestamp, "GET", "/api/v5/account/balance", "")
 
         val response = api.getBalance(
-            apiKey = creds.apiKey,
+            ak = creds.ak,
             sign = sign,
             timestamp = timestamp,
             passphrase = creds.passphrase
@@ -43,7 +43,6 @@ class AuthRepository @Inject constructor(
         if (body.code != "00000") {
             throw RuntimeException("Balance API error: ${body.msg} (${body.code})")
         }
-        // Sum available + hold for the requested coin (USDT by default)
         val usdt = body.data.firstOrNull { it.coin == "USDT" }
         return (usdt?.total?.toDoubleOrNull() ?: usdt?.available?.toDoubleOrNull() ?: 0.0)
     }
@@ -56,7 +55,7 @@ class AuthRepository @Inject constructor(
         val sign = signRequest(creds.apiSecret, timestamp, "GET", "/api/v2/mix/position/all-position", "")
 
         val response = api.getAllPositions(
-            apiKey = creds.apiKey,
+            ak = creds.ak,
             sign = sign,
             timestamp = timestamp,
             passphrase = creds.passphrase
@@ -69,7 +68,6 @@ class AuthRepository @Inject constructor(
         if (body.code != "00000") {
             throw RuntimeException("Positions API error: ${body.msg} (${body.code})")
         }
-        // Filter out zero-size positions
         return body.data.filter { (it.total.toDoubleOrNull() ?: 0.0) > 0.0 }
     }
 

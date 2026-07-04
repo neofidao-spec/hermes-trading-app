@@ -173,9 +173,9 @@ fun LoginScreen(
             Button(
                 onClick = {
                     viewModel.login(
-                        apiKey = apiKey,
-                        secret = apiSecret,
-                        passphrase = passphrase
+                        akValue = apiKey,
+                        secValue = apiSecret,
+                        passValue = passphrase
                     )
                 },
                 modifier = Modifier
